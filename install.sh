@@ -154,7 +154,8 @@ EOL
 
     chmod +x /root/connector.sh
 
-    screen -dmS /root/connector.sh
+    screen -dmS connector_session bash -c '/root/connector.sh'
+
 
     echo "Your job is greate..."
 
@@ -189,7 +190,7 @@ EOL
 
     chmod +x /root/connector.sh
 
-    screen -dmS /root/connector.sh
+    screen -dmS connector_session bash -c '/root/connector.sh'
 
     echo "Your job is greate..."
 
