@@ -31,7 +31,7 @@ install_jq() {
 
 loader(){
 
-    apt update && apt upgrade -y
+    # apt update && apt upgrade -y
     sudo apt-get install iproute2
     run_screen
     install_jq
@@ -46,7 +46,6 @@ loader(){
     SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
 
     GV_CORE=$(check_core_status)
-    WATER_TUNNEL=$(check_tunnel_status)
 
     gv_menu "| 1  - Config Tunnel \n| 2  - Unistall\n| 0  - Exit"
 
@@ -233,7 +232,7 @@ check_core_status() {
 
 unistall(){
 
-    echo $'\e[32mUninstalling WaterWall in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
+    echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
     rm /etc/netplan/dev-ir.yaml
     clear
     echo 'GVTUNNEL Unistalled :(';
