@@ -145,7 +145,7 @@ network:
       addresses:
         - $ipv6_local::1/64
 EOL
-
+    netplan_setup
     sudo netplan apply
 
 cat <<EOL > /connector.py
@@ -178,7 +178,7 @@ network:
       addresses:
         - $ipv6_local::2/64
 EOL
-
+    netplan_setup
     sudo netplan apply
 
 cat <<EOL > /connector.py
@@ -252,7 +252,7 @@ unistall(){
 }
 
 
-netplan(){
+netplan_setup(){
 
     command -v netplan &> /dev/null || { 
         sudo apt update && sudo apt install -y netplan.io && echo "netplan با موفقیت نصب شد." || echo "نصب netplan با خطا مواجه شد."; 
