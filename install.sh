@@ -127,7 +127,7 @@ iran_setup(){
     read -p "Enter Kharej IP  : " kharej_ip
     read -p "Enter IPv6 Local : " ipv6_local
     
-    read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
+    # read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
 
 cat <<EOL > /etc/netplan/dev-ir.yaml
 network:
@@ -167,7 +167,7 @@ kharej_setup(){
     read -p "Enter Kharej IP  : " kharej_ip
     read -p "Enter IPv6 Local : " ipv6_local
     
-    read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
+    # read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
 
 cat <<EOL > /etc/netplan/dev-ir.yaml
 network:
