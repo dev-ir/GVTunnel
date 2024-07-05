@@ -127,7 +127,7 @@ iran_setup(){
     
     read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
 
-cat <<EOL > etc/netplan/dev-ir.yaml
+cat <<EOL > /etc/netplan/dev-ir.yaml
 network:
   version: 2
   tunnels:
@@ -158,7 +158,7 @@ kharej_setup(){
     
     read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
 
-cat <<EOL > etc/netplan/dev-ir.yaml
+cat <<EOL > /etc/netplan/dev-ir.yaml
 network:
   version: 2
   tunnels:
@@ -218,7 +218,7 @@ fi
 
 
 check_core_status() {
-    local file_path="etc/netplan/dev-ir.yaml"
+    local file_path="/etc/netplan/dev-ir.yaml"
     local status
 
     if [ -f "$file_path" ]; then
