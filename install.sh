@@ -36,17 +36,6 @@ loader(){
     run_screen
     install_jq
 
-    # Get server IP
-    SERVER_IP=$(hostname -I | awk '{print $1}')
-
-    # Fetch server country using ip-api com
-    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
-
-    # Fetch server isp using ip-api com 
-    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
-
-    GV_CORE=$(check_core_status)
-
     gv_menu "| 1  - Config Tunnel \n| 2  - Unistall\n| 0  - Exit"
 
     read -p "Enter option number: " choice
@@ -69,6 +58,18 @@ loader(){
 }
 
 gv_menu(){
+
+
+    # Get server IP
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+
+    # Fetch server country using ip-api com
+    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
+
+    # Fetch server isp using ip-api com 
+    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
+
+    GV_CORE=$(check_core_status)
 
     clear
     echo "+-------------------------------------------------------------------------------+"
