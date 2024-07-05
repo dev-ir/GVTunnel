@@ -148,11 +148,13 @@ EOL
     netplan_setup
     sudo netplan apply
 
-cat <<EOL > /connector.py
-    screen -dmS ping $ipv6_local::2
+cat <<EOL > /root/connector.sh
+screen -dmS ping $ipv6_local::2
 EOL
 
-    screen -dmS /connector.py
+    chmod +x /root/connector.sh
+
+    screen -dmS /root/connector.sh
 
     echo "Your job is greate..."
 
@@ -181,11 +183,13 @@ EOL
     netplan_setup
     sudo netplan apply
 
-cat <<EOL > /connector.py
-    ping $ipv6_local::1
+cat <<EOL > /root/connector.sh
+ping $ipv6_local::1
 EOL
 
-    screen -dmS /connector.py
+    chmod +x /root/connector.sh
+
+    screen -dmS /root/connector.sh
 
     echo "Your job is greate..."
 
