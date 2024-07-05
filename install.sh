@@ -31,18 +31,6 @@ install_jq() {
 server_info(){
 
     install_jq
-
-    # Get server IP
-    SERVER_IP=$(hostname -I | awk '{print $1}')
-
-    # Fetch server country using ip-api com
-    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
-
-    # Fetch server isp using ip-api com 
-    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
-
-    GV_CORE=$(check_core_status)
-
 }
 
 
@@ -75,9 +63,19 @@ loader(){
 
 gv_menu(){
 
-    server_info
-
     clear
+
+    # Get server IP
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+
+    # Fetch server country using ip-api com
+    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
+
+    # Fetch server isp using ip-api com 
+    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
+
+    GV_CORE=$(check_core_status)
+
     echo "+-------------------------------------------------------------------------------+"
     echo "|                                                                               |" 
     echo "|   _____ __      __ _______  _    _  _   _  _   _  ______  _                   |"
