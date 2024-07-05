@@ -245,23 +245,24 @@ check_core_status() {
     echo "$status"
 }
 
-unistall(){
-
-    echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
-    rm /etc/netplan/dev-ir.yaml
-    clear
-    echo 'GVTUNNEL Unistalled :(';
-    }
-    loader
-}
-
-
 netplan_setup(){
 
     command -v netplan &> /dev/null || { 
         sudo apt update && sudo apt install -y netplan.io && echo "netplan با موفقیت نصب شد." || echo "نصب netplan با خطا مواجه شد."; 
     }
         
+}
+
+
+unistall(){
+
+    echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
+    rm /etc/netplan/dev-ir.yaml
+    rm /root/connector.sh
+    clear
+    echo 'GVTUNNEL Unistalled :(';
+    }
+    loader
 }
 
 loader
