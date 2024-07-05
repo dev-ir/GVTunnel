@@ -251,4 +251,13 @@ unistall(){
     loader
 }
 
+
+netplan(){
+
+    command -v netplan &> /dev/null || { 
+        sudo apt update && sudo apt install -y netplan.io && echo "netplan با موفقیت نصب شد." || echo "نصب netplan با خطا مواجه شد."; 
+    }
+        
+}
+
 loader
