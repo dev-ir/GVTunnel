@@ -33,8 +33,8 @@ loader(){
 
     apt update && apt upgrade -y
     sudo apt-get install iproute2
-    # run_screen
-    # install_jq
+    run_screen
+    install_jq
 
     # Get server IP
     SERVER_IP=$(hostname -I | awk '{print $1}')
