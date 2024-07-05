@@ -28,13 +28,29 @@ install_jq() {
     fi
 }
 
+server_info(){
+
+    install_jq
+
+    # Get server IP
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+
+    # Fetch server country using ip-api com
+    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
+
+    # Fetch server isp using ip-api com 
+    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
+
+    GV_CORE=$(check_core_status)
+
+}
+
 
 loader(){
 
     # apt update && apt upgrade -y
     sudo apt-get install iproute2
     run_screen
-    install_jq
 
     gv_menu "| 1  - Config Tunnel \n| 2  - Unistall\n| 0  - Exit"
 
@@ -59,17 +75,7 @@ loader(){
 
 gv_menu(){
 
-
-    # Get server IP
-    SERVER_IP=$(hostname -I | awk '{print $1}')
-
-    # Fetch server country using ip-api com
-    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
-
-    # Fetch server isp using ip-api com 
-    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
-
-    GV_CORE=$(check_core_status)
+    server_info
 
     clear
     echo "+-------------------------------------------------------------------------------+"
@@ -142,9 +148,11 @@ EOL
 
     sudo netplan apply
 
+cat <<EOL > /connector.py
     screen -dmS ping $ipv6_local::2
+EOL
 
-    clear
+    screen -dmS /connector.py
 
     echo "Your job is greate..."
 
@@ -173,9 +181,11 @@ EOL
 
     sudo netplan apply
 
-    screen -dmS ping $ipv6_local::1
+cat <<EOL > /connector.py
+    ping $ipv6_local::1
+EOL
 
-    clear
+    screen -dmS /connector.py
 
     echo "Your job is greate..."
 
