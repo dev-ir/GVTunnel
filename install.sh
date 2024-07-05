@@ -10,31 +10,33 @@ NC='\033[0m' # No Color
 
 cur_dir=$(pwd)
 # check root
-# [[ $EUID -ne 0 ]] && echo -e "${RED}Fatal error: ${plain} Please run this script with root privilege \n " && exit 1
+[[ $EUID -ne 0 ]] && echo -e "${RED}Fatal error: ${plain} Please run this script with root privilege \n " && exit 1
 
 install_jq() {
     if ! command -v jq &> /dev/null; then
         # Check if the system is using apt package manager
         if command -v apt-get &> /dev/null; then
-            echo -e "${RED}jq is not installed  Installing   ${NC}"
+            echo -e "${RED}jq is not installed. Installing...${NC}"
             sleep 1
             sudo apt-get update
             sudo apt-get install -y jq
         else
-            echo -e "${RED}Error: Unsupported package manager  Please install jq manually ${NC}\n"
-            read -p "Press any key to continue   "
+            echo -e "${RED}Error: Unsupported package manager. Please install jq manually.${NC}\n"
+            read -p "Press any key to continue..."
             exit 1
         fi
     fi
 }
 
-
-loader(){
-
+init(){
+	install_jq
     # apt update && apt upgrade -y
     sudo apt-get install iproute2
     run_screen
+}
 
+loader(){
+	
     gv_menu "| 1  - Config Tunnel \n| 2  - Unistall\n| 0  - Exit"
 
     read -p "Enter option number: " choice
@@ -57,20 +59,18 @@ loader(){
 }
 
 gv_menu(){
-
+	init
     clear
-
-    install_jq
 
     # Get server IP
     SERVER_IP=$(hostname -I | awk '{print $1}')
 
-    # Fetch server country using ip-api com
-    SERVER_COUNTRY=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' country')
+    # Fetch server country using ip-api.com
+    SERVER_COUNTRY=$(curl -sS "http://ip-api.com/json/$SERVER_IP" | jq -r '.country')
 
-    # Fetch server isp using ip-api com 
-    SERVER_ISP=$(curl -sS "http://ip-api com/yaml/$SERVER_IP" | jq -r ' isp')
-
+    # Fetch server isp using ip-api.com 
+    SERVER_ISP=$(curl -sS "http://ip-api.com/json/$SERVER_IP" | jq -r '.isp')
+	
     GV_CORE=$(check_core_status)
 
     echo "+-------------------------------------------------------------------------------+"
