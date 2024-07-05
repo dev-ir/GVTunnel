@@ -149,7 +149,7 @@ EOL
     sudo netplan apply
 
 cat <<EOL > /root/connector.sh
-screen -dmS ping $ipv6_local::2
+ping $ipv6_local::2
 EOL
 
     chmod +x /root/connector.sh
@@ -188,9 +188,8 @@ cat <<EOL > /root/connector.sh
 ping $ipv6_local::1
 EOL
 
-    chmod +x /root/connector.sh
-
-    screen -dmS connector_session bash -c '/root/connector.sh'
+chmod +x /root/connector.sh
+screen -dmS connector_session bash -c '/root/connector.sh'
 
     echo "Your job is greate..."
 
@@ -260,6 +259,7 @@ unistall(){
     echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
     rm /etc/netplan/dev-ir.yaml
     rm /root/connector.sh
+    pkill screen
     clear
     echo 'GVTUNNEL Unistalled :(';
     }
