@@ -1,15 +1,14 @@
 #!/bin/bash
 
-#add color for text
+# Add color for text
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 plain='\033[0m'
 NC='\033[0m' # No Color
 
-
 cur_dir=$(pwd)
-# check root
+# Check root
 [[ $EUID -ne 0 ]] && echo -e "${RED}Fatal error: ${plain} Please run this script with root privilege \n " && exit 1
 
 install_jq() {
@@ -30,7 +29,6 @@ install_jq() {
 
 init(){
 	install_jq
-    # apt update && apt upgrade -y
     sudo apt-get install iproute2
     run_screen
 }
@@ -79,7 +77,7 @@ gv_menu(){
     echo "|  / ____|\ \    / /|__   __|| |  | || \ | || \ | ||  ____|| |                  |"
     echo "| | |  __  \ \  / /    | |   | |  | ||  \| ||  \| || |__   | |                  |"
     echo "| | | |_ |  \ \/ /     | |   | |  | ||     ||     ||  __|  | |                  |"
-    echo "| | |__| |   \  /      | |   | |__| || |\  || |\  || |____ | |____  ( V2.3 )    |"
+    echo "| | |__| |   \  /      | |   | |__| || |\  || |\  || |____ | |____  ( V3.0 )    |"
     echo "|  \_____|    \/       |_|    \____/ |_| \_||_| \_||______||______|             |"
     echo "|                                                                               |" 
     echo "+-------------------------------------------------------------------------------+"                                                                                                         
@@ -95,19 +93,25 @@ gv_menu(){
     echo -e "\033[0m"
 }
 
-
-
 install_tunnel(){
     gv_menu "| 1  - IRAN \n| 2  - Kharej \n| 0  - Exit"
 
     read -p "Enter option number: " setup
 
+    read -p "How many servers: " server_count
+
     case $setup in
     1)
-        iran_setup
+        for ((i=1;i<=server_count;i++))
+        do
+            iran_setup $i
+        done
         ;;  
     2)
-        kharej_setup
+        for ((i=1;i<=server_count;i++))
+        do
+            kharej_setup $i
+        done
         ;;
     0)
         echo -e "${GREEN}Exiting program...${NC}"
@@ -120,20 +124,18 @@ install_tunnel(){
 
 }
 
-
 iran_setup(){
+    echo -e "${YELLOW}Setting up IRAN server $1${NC}"
     
     read -p "Enter IRAN IP    : " iran_ip
     read -p "Enter Kharej IP  : " kharej_ip
     read -p "Enter IPv6 Local : " ipv6_local
     
-    # read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
-
-cat <<EOL > /etc/netplan/dev-ir.yaml
+    cat <<EOL > /etc/netplan/dev-ir-$1.yaml
 network:
   version: 2
   tunnels:
-    tunnel0858:
+    tunnel0858-$1:
       mode: sit
       local: $iran_ip
       remote: $kharej_ip
@@ -143,37 +145,33 @@ EOL
     netplan_setup
     sudo netplan apply
 
-cat <<EOL > /root/connector.sh
+cat <<EOL > /root/connector-$1.sh
 ping $ipv6_local::2
 EOL
 
-    chmod +x /root/connector.sh
+    chmod +x /root/connector-$1.sh
 
-    screen -dmS connector_session bash -c '/root/connector.sh'
+    screen -dmS connector_session_$1 bash -c "/root/connector-$1.sh"
 
-    echo "Your job is greate..."
-
+    echo "IRAN Server $1 setup complete."
     echo -e "####################################"
     echo -e "# Your IPv6 :                      #"
     echo -e "#  $ipv6_local::1                  #"
     echo -e "####################################"
-
-
 }
 
 kharej_setup(){
+    echo -e "${YELLOW}Setting up Kharej server $1${NC}"
     
     read -p "Enter IRAN IP    : " iran_ip
     read -p "Enter Kharej IP  : " kharej_ip
     read -p "Enter IPv6 Local : " ipv6_local
     
-    # read -p "Enter Kharej Ports ( comma seperate ) : " kharej_port
-
-cat <<EOL > /etc/netplan/dev-ir.yaml
+    cat <<EOL > /etc/netplan/dev-ir-$1.yaml
 network:
   version: 2
   tunnels:
-    tunnel0858:
+    tunnel0858-$1:
       mode: sit
       local: $kharej_ip
       remote: $iran_ip
@@ -183,20 +181,19 @@ EOL
     netplan_setup
     sudo netplan apply
 
-cat <<EOL > /root/connector.sh
+cat <<EOL > /root/connector-$1.sh
 ping $ipv6_local::1
 EOL
 
-chmod +x /root/connector.sh
-screen -dmS connector_session bash -c '/root/connector.sh'
+    chmod +x /root/connector-$1.sh
 
-    echo "Your job is greate..."
+    screen -dmS connector_session_$1 bash -c "/root/connector-$1.sh"
 
+    echo "Kharej Server $1 setup complete."
     echo -e "####################################"
     echo -e "# Your IPv6 :                      #"
     echo -e "#  $ipv6_local::2                  #"
     echo -e "####################################"
-
 }
 
 run_screen(){
@@ -207,12 +204,9 @@ if ! command -v screen &> /dev/null
 then
     echo "Screen is not installed. Installing..."
     
-    # Check the Linux distribution to use the correct package manager
     if [ -f /etc/redhat-release ]; then
-        # CentOS/RHEL
         sudo yum install screen -y
     elif [ -f /etc/debian_version ]; then
-        # Debian/Ubuntu
         sudo apt-get update
         sudo apt-get install screen -y
     else
@@ -220,7 +214,6 @@ then
         exit 1
     fi
     
-    # Verify installation
     if ! command -v screen &> /dev/null
     then
         echo "Failed to install screen. Please install manually."
@@ -231,9 +224,7 @@ then
 else
     echo "Screen is already installed."
 fi
-
 }
-
 
 check_core_status() {
     local file_path="/etc/netplan/dev-ir.yaml"
@@ -249,19 +240,15 @@ check_core_status() {
 }
 
 netplan_setup(){
-
     command -v netplan &> /dev/null || { 
         sudo apt update && sudo apt install -y netplan.io && echo "netplan با موفقیت نصب شد." || echo "نصب netplan با خطا مواجه شد."; 
     }
-        
 }
 
-
 unistall(){
-
     echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
-    rm /etc/netplan/dev-ir.yaml
-    rm /root/connector.sh
+    rm /etc/netplan/dev-ir-*.yaml
+    rm /root/connector-*.sh
     pkill screen
     clear
     echo 'GVTUNNEL Unistalled :(';
