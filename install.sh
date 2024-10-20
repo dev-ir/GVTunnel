@@ -77,7 +77,7 @@ gv_menu(){
     echo "|  / ____|\ \    / /|__   __|| |  | || \ | || \ | ||  ____|| |                  |"
     echo "| | |  __  \ \  / /    | |   | |  | ||  \| ||  \| || |__   | |                  |"
     echo "| | | |_ |  \ \/ /     | |   | |  | ||     ||     ||  __|  | |                  |"
-    echo "| | |__| |   \  /      | |   | |__| || |\  || |\  || |____ | |____  ( V3.0 )    |"
+    echo "| | |__| |   \  /      | |   | |__| || |\  || |\  || |____ | |____  ( V2.3 )    |"
     echo "|  \_____|    \/       |_|    \____/ |_| \_||_| \_||______||______|             |"
     echo "|                                                                               |" 
     echo "+-------------------------------------------------------------------------------+"                                                                                                         
@@ -196,6 +196,47 @@ EOL
     echo -e "####################################"
 }
 
+# Add service creation function
+create_ping_service() {
+    cat <<EOL > /etc/systemd/system/ping-monitor.service
+[Unit]
+Description=Ping Monitor Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/root/ping_monitor.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+    systemctl daemon-reload
+    systemctl enable ping-monitor.service
+    systemctl start ping-monitor.service
+
+    echo -e "${GREEN}Ping monitor service has been created and started.${NC}"
+}
+
+create_ping_monitor_script(){
+    cat <<EOL > /root/ping_monitor.sh
+#!/bin/bash
+
+while true; do
+  for file in /root/connector-*.sh; do
+    echo "Running \$file"
+    bash \$file &
+    sleep 5
+  done
+  sleep 5
+done
+EOL
+
+    chmod +x /root/ping_monitor.sh
+}
+
 run_screen(){
 #!/bin/bash
 
@@ -213,7 +254,7 @@ then
         echo "Unsupported Linux distribution. Please install screen manually."
         exit 1
     fi
-    
+
     if ! command -v screen &> /dev/null
     then
         echo "Failed to install screen. Please install manually."
@@ -247,11 +288,15 @@ netplan_setup(){
 
 unistall(){
     echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
-    rm /etc/netplan/dev-ir-*.yaml
+    rm /etc/netplan/dev-ir*.yaml
     rm /root/connector-*.sh
     pkill screen
     clear
-    echo 'GVTUNNEL Unistalled :(';
+    echo 'GVTUNNEL Uninstalled :(';
+    systemctl stop ping-monitor.service
+    systemctl disable ping-monitor.service
+    rm /etc/systemd/system/ping-monitor.service
+    rm /root/ping_monitor.sh
     }
     loader
 }
