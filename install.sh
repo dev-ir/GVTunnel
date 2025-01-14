@@ -131,7 +131,7 @@ iran_setup(){
     read -p "Enter Kharej IP  : " kharej_ip
     read -p "Enter IPv6 Local : " ipv6_local
     
-    cat <<EOL > /etc/netplan/dev-ir-$1.yaml
+    cat <<EOL > /etc/netplan/mramini-$1.yaml
 network:
   version: 2
   tunnels:
@@ -167,7 +167,7 @@ kharej_setup(){
     read -p "Enter Kharej IP  : " kharej_ip
     read -p "Enter IPv6 Local : " ipv6_local
     
-    cat <<EOL > /etc/netplan/dev-ir-$1.yaml
+    cat <<EOL > /etc/netplan/mramini-$1.yaml
 network:
   version: 2
   tunnels:
@@ -268,7 +268,7 @@ fi
 }
 
 check_core_status() {
-    local file_path="/etc/netplan/dev-ir.yaml"
+    local file_path="/etc/netplan/mramini-1.yaml"
     local status
 
     if [ -f "$file_path" ]; then
@@ -288,7 +288,7 @@ netplan_setup(){
 
 unistall(){
     echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
-    rm /etc/netplan/dev-ir*.yaml
+    rm /etc/netplan/mramini*.yaml
     rm /root/connector-*.sh
     pkill screen
     clear
