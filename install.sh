@@ -77,7 +77,7 @@ gv_menu(){
     echo "|  / ____|\ \    / /|__   __|| |  | || \ | || \ | ||  ____|| |                  |"
     echo "| | |  __  \ \  / /    | |   | |  | ||  \| ||  \| || |__   | |                  |"
     echo "| | | |_ |  \ \/ /     | |   | |  | ||     ||     ||  __|  | |                  |"
-    echo "| | |__| |   \  /      | |   | |__| || |\  || |\  || |____ | |____  ( V3.1 )    |"
+    echo "| | |__| |   \  /      | |   | |__| || |\  || |\  || |____ | |____  ( V3.2 )    |"
     echo "|  \_____|    \/       |_|    \____/ |_| \_||_| \_||______||______|             |"
     echo "|                                                                               |" 
     echo "+-------------------------------------------------------------------------------+"                                                                                                         
@@ -145,13 +145,13 @@ EOL
     netplan_setup
     sudo netplan apply
 
-cat <<EOL > /root/connector-$1.sh
+cat <<EOL > /root/connectors-$1.sh
 ping $ipv6_local::2
 EOL
 
-    chmod +x /root/connector-$1.sh
+    chmod +x /root/connectors-$1.sh
 
-    screen -dmS connector_session_$1 bash -c "/root/connector-$1.sh"
+    screen -dmS connectors_session_$1 bash -c "/root/connectors-$1.sh"
 
     echo "IRAN Server $1 setup complete."
     echo -e "####################################"
@@ -181,13 +181,13 @@ EOL
     netplan_setup
     sudo netplan apply
 
-cat <<EOL > /root/connector-$1.sh
+cat <<EOL > /root/connectors-$1.sh
 ping $ipv6_local::1
 EOL
 
-    chmod +x /root/connector-$1.sh
+    chmod +x /root/connectors-$1.sh
 
-    screen -dmS connector_session_$1 bash -c "/root/connector-$1.sh"
+    screen -dmS connectors_session_$1 bash -c "/root/connectors-$1.sh"
 
     echo "Kharej Server $1 setup complete."
     echo -e "####################################"
@@ -225,7 +225,7 @@ create_ping_monitor_script(){
 #!/bin/bash
 
 while true; do
-  for file in /root/connector-*.sh; do
+  for file in /root/connectors-*.sh; do
     echo "Running \$file"
     bash \$file &
     sleep 5
@@ -289,7 +289,7 @@ netplan_setup(){
 unistall(){
     echo $'\e[32mUninstalling GVTUNNEL in 3 seconds... \e[0m' && sleep 1 && echo $'\e[32m2... \e[0m' && sleep 1 && echo $'\e[32m1... \e[0m' && sleep 1 && {
     rm /etc/netplan/mramini*.yaml
-    rm /root/connector-*.sh
+    rm /root/connectors-*.sh
     pkill screen
     clear
     echo 'GVTUNNEL Uninstalled :(';
