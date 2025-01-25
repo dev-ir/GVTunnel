@@ -171,7 +171,7 @@ kharej_setup(){
 network:
   version: 2
   tunnels:
-    tunnel0858-$1:
+    tunnel0860-$1:
       mode: sit
       local: $kharej_ip
       remote: $iran_ip
