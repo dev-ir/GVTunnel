@@ -135,7 +135,7 @@ iran_setup(){
 network:
   version: 2
   tunnels:
-    tunnel0858-$1:
+    tunnel0860-$1:
       mode: sit
       local: $iran_ip
       remote: $kharej_ip
