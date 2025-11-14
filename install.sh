@@ -46,6 +46,18 @@ check_core_status() {
     echo "$status"
 }
 
+get_tunnel_ipv6() {
+    local file="/etc/netplan/dev-ir.yaml"
+    local ipv6=""
+
+    if [ -f "$file" ]; then
+        # Find line with addresses and extract IPv6 without /64
+        ipv6=$(grep -E '^[[:space:]]*- .*::[0-9]+/64' "$file" 2>/dev/null | awk '{print $2}' | cut -d'/' -f1)
+    fi
+
+    echo "$ipv6"
+}
+
 create_service() {
     local service_file="/etc/systemd/system/gvtunnel-connector.service"
 
@@ -95,6 +107,7 @@ gv_menu() {
     SERVER_ISP=$(curl -sS "http://ip-api.com/json/$SERVER_IP" | jq -r '.isp')
 
     GV_CORE=$(check_core_status)
+    TUN_IPV6=$(get_tunnel_ipv6)
 
     echo "+-------------------------------------------------------------------------------+"
     echo "|                                                                               |"
@@ -108,7 +121,9 @@ gv_menu() {
     echo "+-------------------------------------------------------------------------------+"
     echo -e "|${GREEN}Server Country    |${NC} $SERVER_COUNTRY"
     echo -e "|${GREEN}Server IP         |${NC} $SERVER_IP"
-    echo -e "|${GREEN}Server ISP        |${NC} $SERVER_ISP"
+    if [ -n "$TUN_IPV6" ]; then
+        echo -e "|${GREEN}Tunnel IPv6       |${NC} $TUN_IPV6"
+    fi
     echo -e "|${GREEN}Server Tunnel     |${NC} $GV_CORE"
     echo "+-------------------------------------------------------------------------------+"
     echo -e "|${YELLOW}Please choose an option:${NC}"
@@ -116,6 +131,21 @@ gv_menu() {
     echo -e "$1"
     echo "+-------------------------------------------------------------------------------+"
     echo -e "\033[0m"
+}
+
+check_service_status() {
+    gv_menu "| 3  - Check Service Status\n"
+
+    echo "----- gvtunnel-connector.service status -----"
+    if systemctl is-active --quiet gvtunnel-connector.service; then
+        echo -e "${GREEN}Service is ACTIVE${NC}"
+    else
+        echo -e "${RED}Service is INACTIVE or not installed${NC}"
+    fi
+    echo
+    systemctl --no-pager --full status gvtunnel-connector.service 2>/dev/null | sed -n '1,15p'
+    echo
+    read -p "Press Enter to go back to menu..."
 }
 
 install_tunnel() {
@@ -223,12 +253,13 @@ unistall() {
 }
 
 loader() {
-    gv_menu "| 1  - Config Tunnel\n| 2  - Uninstall\n| 0  - Exit"
+    gv_menu "| 1  - Config Tunnel\n| 2  - Uninstall\n| 3  - Check Service\n| 0  - Exit"
 
     read -p "Enter option number: " choice
     case $choice in
         1) install_tunnel ;;
         2) unistall ;;
+        3) check_service_status ;;
         0)
             echo -e "${GREEN}Exiting program...${NC}"
             exit 0
