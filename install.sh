@@ -46,6 +46,16 @@ check_core_status() {
     echo "$status"
 }
 
+# Generate random ULA IPv6 prefix like fd16:a803:2234
+generate_ipv6_prefix() {
+    local part1 part2 part3
+    # fd + random 2 hex = fdXX
+    part1=$(printf 'fd%02x' $((RANDOM % 256)))
+    part2=$(printf '%04x' $((RANDOM % 65536)))
+    part3=$(printf '%04x' $((RANDOM % 65536)))
+    echo "${part1}:${part2}:${part3}"
+}
+
 get_tunnel_ipv6() {
     local file="/etc/netplan/dev-ir.yaml"
     local ipv6=""
@@ -115,7 +125,7 @@ gv_menu() {
     echo "|  / ____|\\ \\    / /|__   __|| |  | || \\ | || \\ | ||  ____|| |                  |"
     echo "| | |  __  \\ \\  / /    | |   | |  | ||  \\| ||  \\| || |__   | |                  |"
     echo "| | | |_ |  \\ \\/ /     | |   | |  | ||     ||     ||  __|  | |                  |"
-    echo "| | |__| |   \\  /      | |   | |__| || |\\  || |\\  || |____ | |____  ( V2.3 )    |"
+    echo "| | |__| |   \\  /      | |   | |__| || |\\  || |\\  || |____ | |____  ( V2.4 )    |"
     echo "|  \\_____|    \\/       |_|    \\____/ |_| \\_||_| \\_||______||______|             |"
     echo "|                                                                               |"
     echo "+-------------------------------------------------------------------------------+"
@@ -162,9 +172,14 @@ install_tunnel() {
 }
 
 iran_setup() {
-    read -p "Enter IRAN IP    : " iran_ip
-    read -p "Enter Kharej IP  : " kharej_ip
-    read -p "Enter IPv6 Local : " ipv6_local
+    read -p "Enter IRAN IP                 : " iran_ip
+    read -p "Enter Kharej IP               : " kharej_ip
+    read -p "Enter IPv6 Local Prefix (blank = auto): " ipv6_prefix
+
+    if [ -z "$ipv6_prefix" ]; then
+        ipv6_prefix=$(generate_ipv6_prefix)
+        echo -e "${YELLOW}Auto-generated IPv6 prefix:${NC} $ipv6_prefix"
+    fi
 
     cat > /etc/netplan/dev-ir.yaml <<EOL
 network:
@@ -175,7 +190,7 @@ network:
       local: $iran_ip
       remote: $kharej_ip
       addresses:
-        - $ipv6_local::1/64
+        - $ipv6_prefix::1/64
 EOL
 
     netplan_setup
@@ -184,7 +199,7 @@ EOL
     cat > /root/connector.sh <<EOL
 #!/bin/bash
 while true; do
-    ping -6 -c 3 $ipv6_local::2
+    ping -6 -c 3 $ipv6_prefix::2
     sleep 5
 done
 EOL
@@ -192,17 +207,28 @@ EOL
     chmod +x /root/connector.sh
     create_service
 
+    local final_ipv6="$ipv6_prefix::1"
+    echo
     echo "Your job is great..."
     echo "####################################"
-    echo "# Your IPv6 :                      #"
-    echo "#  $ipv6_local::1                  #"
+    echo "# IRAN Tunnel IPv6 :               #"
+    echo "#  $final_ipv6"
     echo "####################################"
+    echo
+    echo "Use this prefix on the KHAREJ side as well: $ipv6_prefix"
+    echo
+    read -p "Press Enter to return to menu..."
 }
 
 kharej_setup() {
-    read -p "Enter IRAN IP    : " iran_ip
-    read -p "Enter Kharej IP  : " kharej_ip
-    read -p "Enter IPv6 Local : " ipv6_local
+    read -p "Enter IRAN IP                 : " iran_ip
+    read -p "Enter Kharej IP               : " kharej_ip
+    read -p "Enter IPv6 Local Prefix (blank = auto): " ipv6_prefix
+
+    if [ -z "$ipv6_prefix" ]; then
+        ipv6_prefix=$(generate_ipv6_prefix)
+        echo -e "${YELLOW}Auto-generated IPv6 prefix:${NC} $ipv6_prefix"
+    fi
 
     cat > /etc/netplan/dev-ir.yaml <<EOL
 network:
@@ -213,7 +239,7 @@ network:
       local: $kharej_ip
       remote: $iran_ip
       addresses:
-        - $ipv6_local::2/64
+        - $ipv6_prefix::2/64
 EOL
 
     netplan_setup
@@ -222,7 +248,7 @@ EOL
     cat > /root/connector.sh <<EOL
 #!/bin/bash
 while true; do
-    ping -6 -c 3 $ipv6_local::1
+    ping -6 -c 3 $ipv6_prefix::1
     sleep 5
 done
 EOL
@@ -230,11 +256,17 @@ EOL
     chmod +x /root/connector.sh
     create_service
 
+    local final_ipv6="$ipv6_prefix::2"
+    echo
     echo "Your job is great..."
     echo "####################################"
-    echo "# Your IPv6 :                      #"
-    echo "#  $ipv6_local::2                  #"
+    echo "# Kharej Tunnel IPv6 :            #"
+    echo "#  $final_ipv6"
     echo "####################################"
+    echo
+    echo "Use the same prefix on the IRAN side: $ipv6_prefix"
+    echo
+    read -p "Press Enter to return to menu..."
 }
 
 unistall() {
