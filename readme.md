@@ -10,7 +10,7 @@
 ## Install & Upgrade
 
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/dev-ir/GVTunnel/services/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/dev-ir/GVTunnel/install.sh)
 ```
 
 ## Languages
