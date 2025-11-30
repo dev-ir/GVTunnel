@@ -6,11 +6,20 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-# ----------------- Constants -----------------
-NETPLAN_FILE="/etc/netplan/dev-ir.yaml"
-SERVICE_NAME="gvtunnel-connector.service"
-SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
-CONNECTOR_SCRIPT="/root/connector.sh"
+# ----------------- Defaults -----------------
+DEFAULT_TUN_NAME="main"
+
+# این تابع با توجه به اسم تانل، مسیر فایل‌ها رو ست می‌کند
+set_context() {
+    TUN_NAME="$1"
+    NETPLAN_FILE="/etc/netplan/dev-ir-${TUN_NAME}.yaml"
+    SERVICE_NAME="gvtunnel-connector-${TUN_NAME}.service"
+    SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
+    CONNECTOR_SCRIPT="/root/connector-${TUN_NAME}.sh"
+}
+
+# init context با مقدار پیش‌فرض
+set_context "$DEFAULT_TUN_NAME"
 
 # ----------------- Root check -----------------
 if [[ $EUID -ne 0 ]]; then
@@ -51,6 +60,19 @@ netplan_setup() {
     fi
 }
 
+enable_ipv6_forwarding() {
+    local conf="/etc/sysctl.d/99-gvtunnel-ipv6.conf"
+
+    if sysctl net.ipv6.conf.all.forwarding 2>/dev/null | grep -q ' = 1$'; then
+        return
+    fi
+
+    echo -e "${YELLOW}Enabling IPv6 forwarding (router mode)...${NC}"
+    echo "net.ipv6.conf.all.forwarding=1" > "$conf"
+    sysctl -p "$conf"
+    echo -e "${GREEN}IPv6 forwarding enabled.${NC}"
+}
+
 check_core_status() {
     if [ -f "$NETPLAN_FILE" ]; then
         echo "Installed"
@@ -81,7 +103,7 @@ get_tunnel_ipv6() {
 create_service() {
     cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=GV Tunnel IPv6 Connector
+Description=GV Tunnel IPv6 Connector ($TUN_NAME)
 After=network-online.target
 Wants=network-online.target
 
@@ -177,15 +199,16 @@ gv_menu() {
     echo "| ██   ███ ██    ██    ██    ██    ██ ██ ██  ██ ██ ██  ██ █████   ██      |"
     echo "| ██    ██  ██  ██     ██    ██    ██ ██  ██ ██ ██  ██ ██ ██      ██      |"
     echo "|  ██████    ████      ██     ██████  ██   ████ ██   ████ ███████ ███████ |"
-    echo "|                                                       version :  2.6.1  |"
+    echo "|                                                       version :  2.6.2  |"
     echo "+-------------------------------------------------------------------------+"
     echo -e "|${GREEN}Server Country    |${NC} $SERVER_COUNTRY"
     echo -e "|${GREEN}Server ISP        |${NC} $SERVER_ISP"
     echo -e "|${GREEN}Server IP         |${NC} $SERVER_IP"
+    echo -e "|${GREEN}Active Tunnel     |${NC} $TUN_NAME"
     if [ -n "$TUN_IPV6" ]; then
         echo -e "|${GREEN}Tunnel IPv6       |${NC} $TUN_IPV6"
     fi
-    echo -e "|${GREEN}Server Tunnel     |${NC} ${core_color}${GV_CORE}${NC}"
+    echo -e "|${GREEN}Tunnel Status     |${NC} ${core_color}${GV_CORE}${NC}"
     echo "+-------------------------------------------------------------------------+"
     echo -e "|${YELLOW}Please choose an option:${NC}"
     echo "+-------------------------------------------------------------------------+"
@@ -195,7 +218,11 @@ gv_menu() {
 }
 
 check_service_status() {
-    gv_menu "| 3  - Check Service Status\n"
+    read -rp "Enter tunnel name to check [default: ${DEFAULT_TUN_NAME}]: " name
+    [ -z "$name" ] && name="$DEFAULT_TUN_NAME"
+    set_context "$name"
+
+    gv_menu "| 3  - Check Service Status for tunnel '${TUN_NAME}'\n"
 
     echo "----- $SERVICE_NAME status -----"
     if systemctl is-active --quiet "$SERVICE_NAME"; then
@@ -209,17 +236,16 @@ check_service_status() {
     read -rp "Press Enter to go back to menu..."
 }
 
-# Unified setup for IRAN / Kharej
+# Unified setup for IRAN / Kharej (روی این سرور ایران‌رو هاب بگیر)
 setup_tunnel() {
     local role="$1"
     local iran_ip kharej_ip ipv6_prefix
     local local_ip remote_ip
     local local_suffix remote_suffix
-    local side_label side_text other_side_text
+    local side_text other_side_text
 
     case "$role" in
         iran)
-            side_label="IRAN"
             local_suffix="1"
             remote_suffix="2"
             read -rp "Enter IRAN IP                 : " iran_ip
@@ -230,7 +256,6 @@ setup_tunnel() {
             other_side_text="Use this prefix on the KHAREJ side as well"
             ;;
         kharej)
-            side_label="Kharej"
             local_suffix="2"
             remote_suffix="1"
             read -rp "Enter IRAN IP                 : " iran_ip
@@ -256,7 +281,7 @@ setup_tunnel() {
 network:
   version: 2
   tunnels:
-    tunnel0858:
+    tunnel-${TUN_NAME}:
       mode: sit
       local: $local_ip
       remote: $remote_ip
@@ -291,10 +316,14 @@ EOL
 }
 
 install_tunnel() {
-    gv_menu "| 1  - IRAN\n| 2  - Kharej\n| 0  - Back"
+    read -rp "Enter tunnel name (e.g. de1, us1) [default: ${DEFAULT_TUN_NAME}]: " name
+    [ -z "$name" ] && name="$DEFAULT_TUN_NAME"
+    set_context "$name"
 
-    read -rp "Enter option number: " setup
-    case $setup in
+    gv_menu "| 1  - IRAN (this server)\n| 2  - Kharej (this server)\n| 0  - Back"
+
+    read -rp "Enter option number: " setup_mode
+    case $setup_mode in
         1) setup_tunnel "iran" ;;
         2) setup_tunnel "kharej" ;;
         0) return ;;
@@ -303,7 +332,11 @@ install_tunnel() {
 }
 
 uninstall_tunnel() {
-    echo -e "${GREEN}Uninstalling GVTUNNEL in 3 seconds...${NC}"
+    read -rp "Enter tunnel name to uninstall [default: ${DEFAULT_TUN_NAME}]: " name
+    [ -z "$name" ] && name="$DEFAULT_TUN_NAME"
+    set_context "$name"
+
+    echo -e "${GREEN}Uninstalling GVTUNNEL (${TUN_NAME}) in 3 seconds...${NC}"
     sleep 1 && echo -e "${GREEN}2...${NC}"
     sleep 1 && echo -e "${GREEN}1...${NC}"
     sleep 1
@@ -314,11 +347,12 @@ uninstall_tunnel() {
 
     apply_netplan_safe || true
     clear
-    echo 'GVTUNNEL Uninstalled :('
+    echo "GVTUNNEL (${TUN_NAME}) Uninstalled :("
 }
 
 loader() {
-    gv_menu "| 1  - Config Tunnel\n| 2  - Uninstall\n| 3  - Check Service\n| 0  - Exit"
+    # برای نمایش منو از context فعلی استفاده می‌کنیم
+    gv_menu "| 1  - Config Tunnel\n| 2  - Uninstall Tunnel\n| 3  - Check Service\n| 0  - Exit"
 
     read -rp "Enter option number: " choice
     case $choice in
@@ -337,6 +371,7 @@ loader() {
 
 init() {
     install_jq
+    enable_ipv6_forwarding
 
     # Ensure iproute2/ip command exists
     if ! command -v ip &> /dev/null; then
