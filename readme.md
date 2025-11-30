@@ -10,7 +10,7 @@
 ## Install & Upgrade
 
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/dev-ir/GVTunnel/master/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/dev-ir/GVTunnel/services/install.sh)
 ```
 
 ## Languages
@@ -19,7 +19,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/dev-ir/GVTunnel/master/install
 
 ## 🪚 Preview
 <p align="left">
-    <img width="100%" src="https://github.com/dev-ir/Gost-ip6/assets/114811214/8886c7e6-12e4-4ccf-ba4c-2d799b9fdf44" alt="Image">
+    <img width="100%" src="https://github.com/user-attachments/assets/8c0ca4a5-6959-461c-85c4-6b485236cd41" alt="Image">
 </p>
 
 ## 🙏 Support with Crypto 
