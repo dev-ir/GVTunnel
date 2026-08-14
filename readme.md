@@ -1,8 +1,8 @@
 <h1 align="center"/>⚡️ Welcome to GVTunnel ⚡️</h1>
 
-**GRE Tunnel • Built on Linux GRE Core**
+**GV Tunnel • Built on GOST AND DIFFRENTv6 Core**
 
-> **Disclaimer:** Disclaimer: GRE Tunnel establishes a lightweight point-to-point IPv4 tunnel between IRAN and Kharej servers using the native Linux GRE protocol.
+> **Disclaimer:** GVTUNNEL is a A tunnel has been configured locally based on IPv6 definition and using Ghost Tunnel version 3..
 
 **We don't need financial support, only Star (⭐) is enough, thank you.**
 
